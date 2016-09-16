@@ -77,6 +77,8 @@ def on_message(event_name, message_text):
         return
 
     if event_name == 'change_user_name':
+        if not message_text:
+            message_text = 'Anonymous'
         user_list[session['uid']]['name'] = message_text
         cache.set('user_list', user_list)
         emit_user_list()
