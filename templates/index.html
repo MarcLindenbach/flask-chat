@@ -10,8 +10,27 @@
   </head>
   <body>
 
-    <div class="container">
-
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-xs-10">
+          <ul id="chat_messages">
+          </ul>
+        </div>
+        <div class="col-xs-2">
+          <ul class="list-group" id="user_names">
+          </ul>
+        </div>
+      </div>
+      <div class="navbar navbar-fixed-bottom">
+        <form id="message">
+          <div class="col-xs-10">
+            <input type="text" class="form-control" name="message_text" id="message_text" />
+          </div>
+          <div class="col-xs-2">
+            <button class="btn btn-primary">Send</button>
+          </div>
+        </form>
+      </div>
     <div>
 
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
@@ -19,9 +38,39 @@
 
     <script>
       var socket = io.connect('http://' + document.domain + ':' + location.port);
+      var user_name = '{{ user_name }}';
+
+      socket.on('connect', function() {
+        if (!user_name) {
+          user_name = prompt('Enter a User Name');
+          socket.send('change_user_name', user_name);
+        }
+      });
 
       socket.on('user_list', function(users) {
-        console.log(users);
+        var user_names = '';
+        $.each(users, function(key, user) {
+          user_names += '<li class="list-group-item">' +
+                          user.name +
+                        '</li>';
+        });
+
+        $('#user_names').html(user_names);
+      });
+
+      socket.on('chat_message', function(message) {
+        $('#chat_messages').append('<li>' +
+                                      message.user_name + ': ' + message.chat_message +
+                                    '</li>');
+      });
+
+      $('#message').on('submit', function(e) {
+        e.preventDefault();
+        let message_text = $(this).serializeArray()[0].value;
+
+        socket.send('send_chat_message', message_text);
+
+        $('#message_text')[0].value = '';
       });
     </script>
   </body>
